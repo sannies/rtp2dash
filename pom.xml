@@ -20,12 +20,12 @@
         <dependency>
             <groupId>com.mp4parser</groupId>
             <artifactId>isoparser</artifactId>
-            <version>1.9.6</version>
+            <version>1.9.13</version>
         </dependency>
         <dependency>
             <groupId>com.mp4parser</groupId>
             <artifactId>streaming</artifactId>
-            <version>1.9.6</version>
+            <version>1.9.13</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -79,7 +79,7 @@
     <repositories>
         <repository>
             <id>mp4parser-2.x</id>
-            <url>https://oss.sonatype.org/content/repositories/central_bundles-4882</url>
+            <url>https://oss.sonatype.org/content/repositories/central_bundles-4900</url>
         </repository>
     </repositories>
 </project>
