@@ -1,19 +1,18 @@
 package com.mp4parser.rtp2dash;
 
-import com.mp4parser.boxes.iso14496.part1.objectdescriptors.*;
+import com.mp4parser.boxes.iso14496.part1.objectdescriptors.AudioSpecificConfig;
+import com.mp4parser.boxes.iso14496.part1.objectdescriptors.DecoderConfigDescriptor;
+import com.mp4parser.boxes.iso14496.part1.objectdescriptors.ESDescriptor;
+import com.mp4parser.boxes.iso14496.part1.objectdescriptors.SLConfigDescriptor;
 import com.mp4parser.boxes.iso14496.part12.SampleDescriptionBox;
 import com.mp4parser.boxes.iso14496.part14.ESDescriptorBox;
 import com.mp4parser.boxes.sampleentry.AudioSampleEntry;
-import com.mp4parser.muxer.DataSource;
 import com.mp4parser.muxer.tracks.h264.parsing.read.BitstreamReader;
 import com.mp4parser.streaming.AbstractStreamingTrack;
 import com.mp4parser.streaming.StreamingSampleImpl;
-import com.mp4parser.streaming.StreamingTrack;
 import com.mp4parser.streaming.extensions.DefaultSampleFlagsTrackExtension;
 import com.mp4parser.tools.Ascii;
 import com.mp4parser.tools.Hex;
-import com.mp4parser.tools.IsoTypeReader;
-import com.mp4parser.tools.Mp4Arrays;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,7 +20,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;

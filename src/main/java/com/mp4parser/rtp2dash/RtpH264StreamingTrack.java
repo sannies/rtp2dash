@@ -1,7 +1,6 @@
 package com.mp4parser.rtp2dash;
 
 import com.mp4parser.muxer.tracks.h264.parsing.read.BitstreamReader;
-import com.mp4parser.streaming.StreamingSample;
 import com.mp4parser.streaming.rawformats.h264.H264NalConsumingTrack;
 import com.mp4parser.tools.IsoTypeReader;
 import com.mp4parser.tools.Mp4Arrays;
@@ -13,7 +12,6 @@ import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.Base64;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
