@@ -18,7 +18,7 @@ public class TestAac {
         LogManager.getLogManager().readConfiguration(TestAac.class.getResourceAsStream("/log.properties"));
 
 
-        RtpAacStreamingTrack st = new RtpAacStreamingTrack(5005, 97, 128, "profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3; config=1190", "MPEG4-GENERIC/48000/2");
+        RtpAacStreamingTrack st = new RtpAacStreamingTrack(new Phaser(), 5005, 97, 128, "profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3; config=1190", "MPEG4-GENERIC/48000/2");
         ExecutorService es = Executors.newCachedThreadPool();
         OutputStream os = new FileOutputStream("output.mp4");
         final MultiTrackFragmentedMp4Writer streamingMp4Writer = new MultiTrackFragmentedMp4Writer(Collections.<StreamingTrack>singletonList(st), os);

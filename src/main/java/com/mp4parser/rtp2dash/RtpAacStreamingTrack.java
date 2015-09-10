@@ -22,6 +22,7 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Phaser;
 import java.util.logging.Logger;
 
 /**
@@ -30,7 +31,7 @@ import java.util.logging.Logger;
 public class RtpAacStreamingTrack extends AbstractStreamingTrack implements ReceivingStreamingTrack {
     private static final Logger LOG = Logger.getLogger(RtpAacStreamingTrack.class.getName());
     boolean isReceiving = false;
-    private int initialTimeout = 10000;
+    private int initialTimeout = 120000;
     private int timeout = 5000;
     CountDownLatch countDownLatch = new CountDownLatch(1);
     private int port;
@@ -40,8 +41,11 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Rece
     private long clockrate;
     SampleDescriptionBox stsd;
     String language = "und";
+    private Phaser started;
 
-    public RtpAacStreamingTrack(int port, int payloadType, int bandwidth, String fmtp, String rtpMap) {
+    public RtpAacStreamingTrack(Phaser started, int port, int payloadType, int bandwidth, String fmtp, String rtpMap) {
+        this.started = started;
+        this.started.register();
         String encoding = rtpMap.split("/")[0];
         clockrate = Integer.parseInt(rtpMap.split("/")[1]);
         int audioChannels = Integer.parseInt(rtpMap.split("/")[2]);
@@ -129,6 +133,7 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Rece
 
     public Void call() throws IOException {
         isReceiving = true;
+        boolean once = false;
         try {
             DatagramSocket socket = new DatagramSocket(port);
             socket.setSoTimeout(initialTimeout);
@@ -139,6 +144,10 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Rece
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 try {
                     socket.receive(packet);
+                    if (!once) {
+                        once = true;
+                        this.started.arrive();
+                    }
                 } catch (SocketTimeoutException e) {
                     LOG.info("Socket Timeout closed RtpAacStreamingTrack");
                     isReceiving = false;

@@ -13,6 +13,7 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Phaser;
 import java.util.logging.Logger;
 
 public class RtpH264StreamingTrack extends H264NalConsumingTrack implements ReceivingStreamingTrack {
@@ -21,6 +22,7 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Rece
     private int initialTimeout = 10000;
     private int timeout = 5000;
     CountDownLatch countDownLatch = new CountDownLatch(1);
+    private Phaser started;
     private int port;
     private int payloadType;
 
@@ -43,8 +45,10 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Rece
         }
     }
 
-    public RtpH264StreamingTrack(String sprop, int port, int payloadType) throws IOException {
+    public RtpH264StreamingTrack(Phaser started, String sprop, int port, int payloadType) throws IOException {
         super();
+        this.started = started;
+        this.started.register();
         this.port = port;
         this.payloadType = payloadType;
 
@@ -57,6 +61,7 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Rece
 
     public Void call() throws IOException {
         isReceiving = true;
+        boolean once = false;
         try {
             DatagramSocket socket = new DatagramSocket(port);
             socket.setSoTimeout(initialTimeout);
@@ -67,6 +72,10 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Rece
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 try {
                     socket.receive(packet);
+                    if (!once) {
+                        once = true;
+                        this.started.arrive();
+                    }
                 } catch (SocketTimeoutException e) {
                     LOG.info("Socket Timeout closed RtpH264StreamingTrack");
                     isReceiving = false;
