@@ -7,15 +7,11 @@ re-emitted as MPEG-DASH.
 The sample server is not configurable in any way from the outside. The configuration is in the code and reflects the
 prepared test content.
 
-Please download
-- the samples content from: http://com.mp4parser.s3.amazonaws.com/tos-mbr-in-one-file.mp4
-- the release from: https://github.com/sannies/rtp2dash/releases/download/v1.0/rtp2dash-1.0.jar
-
-
 Prerequisites:
 ---------------
 
 * [java 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+* [Rtp2DASH Release 1.0](https://github.com/sannies/rtp2dash/releases/download/v1.0/rtp2dash-1.0.jar)
 * [ffmpeg](https://www.ffmpeg.org/download.html)
 * [tos-mbr-in-one-file.mp4](http://com.mp4parser.s3.amazonaws.com/tos-mbr-in-one-file.mp4)
 
