@@ -23,17 +23,18 @@ import java.util.logging.Logger;
 
 public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
     private static final Logger LOG = Logger.getLogger(DashFragmentedMp4Writer.class.getName());
-    private File baseDir;
     private File representationBaseDir;
-    private final long adaptationSetId;
+    private long adaptationSetId;
     private String representationId;
     private StreamingTrack source;
 
 
-
-    public DashFragmentedMp4Writer(StreamingTrack source, File baseDir, long adaptationSetId, String representationId, OutputStream outputStream) throws IOException {
-        super(Collections.singletonList(source), outputStream);
-        this.baseDir = baseDir;
+    public DashFragmentedMp4Writer(ReceivingStreamingTrack source, File baseDir, long adaptationSetId, String representationId, OutputStream outputStream) throws IOException {
+        super(Collections.<StreamingTrack>singletonList(source), outputStream);
+        if (!source.isReceiving()) {
+            LOG.warning(source + " is not receiving any data. Will not create Representation.");
+            return;
+        }
         this.source = source;
         this.adaptationSetId = adaptationSetId;
         this.representationId = representationId;
@@ -47,7 +48,7 @@ public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
     }
 
     public boolean isClosed() {
-        return !source.hasMoreSamples();
+        return source == null || !source.hasMoreSamples();
     }
 
     @Override
@@ -89,14 +90,17 @@ public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
 
 
     RepresentationType getRepresentation() {
+        if (source == null) {
+            return null;
+        }
         RepresentationType representationType = new RepresentationType();
         representationType.setId(representationId);
         representationType.setCodecs(DashHelper.getRfc6381Codec(source.getSampleDescriptionBox().getSampleEntry()));
         representationType.setStartWithSAP(1L);
         if ("vide".equals(this.source.getHandler())) {
             representationType.setMimeType("video/mp4");
-            representationType.setWidth((long) ((VisualSampleEntry)source.getSampleDescriptionBox().getSampleEntry()).getWidth());
-            representationType.setHeight((long) ((VisualSampleEntry)source.getSampleDescriptionBox().getSampleEntry()).getHeight());
+            representationType.setWidth((long) ((VisualSampleEntry) source.getSampleDescriptionBox().getSampleEntry()).getWidth());
+            representationType.setHeight((long) ((VisualSampleEntry) source.getSampleDescriptionBox().getSampleEntry()).getHeight());
         } else if ("soun".equals(this.source.getHandler())) {
             representationType.setMimeType("audio/mp4");
         } else {
@@ -116,6 +120,7 @@ public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
                 return name.contains("media-");
             }
         });
+
         Arrays.sort(files, new Comparator<File>() {
             public int compare(File o1, File o2) {
                 return (int) (getTime(o1) - getTime(o2));
@@ -155,7 +160,7 @@ public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
             }
             representationDuration += d;
         }
-        representationType.setBandwidth((fileSize * 8 * this.source.getTimescale()) / representationDuration);
+        representationType.setBandwidth(representationDuration != 0 ? ((fileSize * 8 * this.source.getTimescale()) / representationDuration) : 0);
 
 
         return representationType;

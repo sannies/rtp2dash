@@ -18,14 +18,14 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.mp4parser</groupId>
+            <groupId>org.mp4parser</groupId>
             <artifactId>isoparser</artifactId>
-            <version>1.9.13</version>
+            <version>1.9.15-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.mp4parser</groupId>
+            <groupId>org.mp4parser</groupId>
             <artifactId>streaming</artifactId>
-            <version>1.9.13</version>
+            <version>1.9.15-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -36,6 +36,11 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>4.0.27.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>net.lingala.zip4j</groupId>
+            <artifactId>zip4j</artifactId>
+            <version>1.3.2</version>
         </dependency>
 
         <!--Test dependencies-->
@@ -79,7 +84,7 @@
     <repositories>
         <repository>
             <id>mp4parser-2.x</id>
-            <url>https://oss.sonatype.org/content/repositories/central_bundles-4900</url>
+            <url>https://oss.sonatype.org/content/repositories/central_bundles-4907</url>
         </repository>
     </repositories>
 </project>

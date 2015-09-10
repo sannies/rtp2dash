@@ -44,25 +44,29 @@ public class ManifestHelper {
         mpd.setProfiles("urn:mpeg:dash:profile:isoff-live:2011");
         Map<Long, AdaptationSetType> adaptationSetsMap = new HashMap<Long, AdaptationSetType>();
         for (DashFragmentedMp4Writer track : tracks) {
-            AdaptationSetType adaptationSetType = adaptationSetsMap.get(track.getAdaptationSetId());
-            if (adaptationSetType == null) {
-                adaptationSetType = new AdaptationSetType();
-                adaptationSetsMap.put(track.getAdaptationSetId(), adaptationSetType);
-                adaptationSetType.setId(track.getAdaptationSetId());
-                String hdlr = track.getSource().getHandler();
-                if ("soun".equals(hdlr)) {
-                    adaptationSetType.setContentType("audio");
-                } else if ("vide".equals(hdlr)) {
-                    adaptationSetType.setContentType("video");
-                } else if ("text".equals(hdlr) || "subt".equals(hdlr)) {
-                    adaptationSetType.setContentType("text");
-                } else {
-                    throw new IOException("Unknown handler " + hdlr);
+            RepresentationType representation = track.getRepresentation();
+            if (representation != null) {
+                AdaptationSetType adaptationSetType = adaptationSetsMap.get(track.getAdaptationSetId());
+                if (adaptationSetType == null) {
+                    adaptationSetType = new AdaptationSetType();
+                    adaptationSetsMap.put(track.getAdaptationSetId(), adaptationSetType);
+                    adaptationSetType.setId(track.getAdaptationSetId());
+                    String hdlr = track.getSource().getHandler();
+                    if ("soun".equals(hdlr)) {
+                        adaptationSetType.setContentType("audio");
+                        adaptationSetType.setLang(track.getSource().getLanguage());
+                    } else if ("vide".equals(hdlr)) {
+                        adaptationSetType.setContentType("video");
+                    } else if ("text".equals(hdlr) || "subt".equals(hdlr)) {
+                        adaptationSetType.setContentType("text");
+                    } else {
+                        throw new IOException("Unknown handler " + hdlr);
+                    }
+                    adaptationSetType.setSegmentAlignment("true");
                 }
-                adaptationSetType.setSegmentAlignment("true");
-            }
 
-            adaptationSetType.getRepresentation().add(track.getRepresentation());
+                adaptationSetType.getRepresentation().add(representation);
+            }
         }
         for (AdaptationSetType adaptationSetType : adaptationSetsMap.values()) {
             periodType.getAdaptationSet().add(adaptationSetType);

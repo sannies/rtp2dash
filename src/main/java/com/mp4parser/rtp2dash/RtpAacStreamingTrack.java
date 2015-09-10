@@ -21,16 +21,15 @@ import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 /**
  * Created by sannies on 01.09.2015.
  */
-public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Callable<Void> {
+public class RtpAacStreamingTrack extends AbstractStreamingTrack implements ReceivingStreamingTrack {
     private static final Logger LOG = Logger.getLogger(RtpAacStreamingTrack.class.getName());
-    boolean isOpen = true;
+    boolean isReceiving = false;
     private int initialTimeout = 10000;
     private int timeout = 5000;
     CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -124,20 +123,25 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Call
 
     }
 
+    public boolean isReceiving() {
+        return isReceiving;
+    }
+
     public Void call() throws IOException {
+        isReceiving = true;
         try {
             DatagramSocket socket = new DatagramSocket(port);
             socket.setSoTimeout(initialTimeout);
 
             byte[] buf = new byte[16384];
             LOG.info("Start Receiving AAC RTP Packets on port " + port);
-            while (isOpen) {
+            while (isReceiving && !Thread.currentThread().isInterrupted()) {
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 try {
                     socket.receive(packet);
                 } catch (SocketTimeoutException e) {
                     LOG.info("Socket Timeout closed RtpAacStreamingTrack");
-                    isOpen = false;
+                    isReceiving = false;
                     continue;
                 }
                 socket.setSoTimeout(timeout);
@@ -182,13 +186,13 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Call
 
             }
             LOG.info("Done receiving RTP Packets");
-            countDownLatch.countDown();
             return null;
         } finally {
-            if (isOpen) {
+            countDownLatch.countDown();
+            if (isReceiving && !Thread.currentThread().isInterrupted()) {
                 LOG.warning("Stopping RTP Receiver due to exception. " + toString());
             }
-            isOpen = false;
+            isReceiving = false;
         }
     }
 
@@ -237,7 +241,7 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Call
     }
 
     public boolean hasMoreSamples() {
-        return samples.size() > 0 || isOpen;
+        return samples.size() > 0 || isReceiving;
     }
 
     public String getHandler() {

@@ -12,17 +12,17 @@ import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.Base64;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
-public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Callable<Void> {
+public class RtpH264StreamingTrack extends H264NalConsumingTrack implements ReceivingStreamingTrack {
     private static final Logger LOG = Logger.getLogger(RtpH264StreamingTrack.class.getName());
-    boolean isOpen = true;
+    boolean isReceiving = false;
     private int initialTimeout = 10000;
     private int timeout = 5000;
     CountDownLatch countDownLatch = new CountDownLatch(1);
     private int port;
+    private int payloadType;
 
 
     long rtpTimestamp;
@@ -31,11 +31,11 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
 
     @Override
     public boolean sourceDepleted() {
-        return !isOpen;
+        return !isReceiving;
     }
 
     public void close() throws IOException {
-        isOpen = false;
+        isReceiving = false;
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
@@ -43,9 +43,10 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
         }
     }
 
-    public RtpH264StreamingTrack(String sprop, int port) throws IOException {
+    public RtpH264StreamingTrack(String sprop, int port, int payloadType) throws IOException {
         super();
         this.port = port;
+        this.payloadType = payloadType;
 
         String[] spspps = sprop.split(",");
         byte[] sps = Base64.getDecoder().decode(spspps[0]);
@@ -55,19 +56,20 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
     }
 
     public Void call() throws IOException {
+        isReceiving = true;
         try {
             DatagramSocket socket = new DatagramSocket(port);
             socket.setSoTimeout(initialTimeout);
-            byte[] nalBuf = new byte[0];
+            byte[] fuNalBuf = new byte[0];
             byte[] buf = new byte[16384];
             LOG.info("Start Receiving H264 RTP Packets on port " + port);
-            while (isOpen) {
+            while (isReceiving && !Thread.currentThread().isInterrupted()) {
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 try {
                     socket.receive(packet);
                 } catch (SocketTimeoutException e) {
                     LOG.info("Socket Timeout closed RtpH264StreamingTrack");
-                    isOpen = false;
+                    isReceiving = false;
                     continue;
                 }
                 socket.setSoTimeout(timeout);
@@ -78,6 +80,11 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
                 int cc = (int) bsr.readNBit(4);
                 boolean m = bsr.readBool();
                 int pt = (int) bsr.readNBit(7);
+                if (pt != payloadType) {
+                    LOG.warning("Received package of payload type " + pt + " eventhough it should be of type " + payloadType + ". Ignoring.");
+                    // typically it's the RTSP sender report
+                    continue; //  this is not a packet for me.
+                }
                 int sequenceNumber = (int) bsr.readNBit(16);
                 ByteBuffer bb = ByteBuffer.wrap(packet.getData(), 4, packet.getData().length - 4);
                 bb.limit(packet.getLength());
@@ -90,11 +97,22 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
                 ByteBuffer payload = bb.slice();
                 int nalUnitType = payload.get(0) & 0x1f;
                 if (nalUnitType >= 1 && nalUnitType <= 23) {
+                    if (nalUnitType != 1 && nalUnitType != 5 && nalUnitType != 6) {
+                        System.err.println(nalUnitType);
+                    }
                     byte[] nalSlice = new byte[payload.remaining()];
                     payload.get(nalSlice);
                     consumeNal(nalSlice);
                 } else if (nalUnitType == 24) {
+                    payload.position(1);
+                    while (payload.remaining()>1) {
+                        int length = IsoTypeReader.readUInt16(payload);
+                        ByteBuffer nalBuf = payload.slice();
+                        nalBuf.limit(length);
+                        payload.position(payload.position() + length);
+                    }
                     throw new RuntimeException("No Support for STAP A " + toString());
+
                 } else if (nalUnitType == 25) {
                     throw new RuntimeException("No Support for STAP B " + toString());
                 } else if (nalUnitType == 26) {
@@ -111,17 +129,16 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
                     //System.out.print("FU-A start: " + s + " end: " + e);
                     payload.position(2);
                     if (s) {
-                        nalBuf = new byte[]{(byte) ((fuIndicator & 96) + (fuHeader & 31))};
+                        fuNalBuf = new byte[]{(byte) ((fuIndicator & 96) + (fuHeader & 31))};
                     }
-                    if (nalBuf != null) {
+                    if (fuNalBuf != null) {
                         byte[] nalSlice = new byte[payload.remaining()];
                         payload.get(nalSlice);
-                        nalBuf = Mp4Arrays.copyOfAndAppend(nalBuf, nalSlice);
+                        fuNalBuf = Mp4Arrays.copyOfAndAppend(fuNalBuf, nalSlice);
                     }
-                    if (e && nalBuf != null) {
-                        //System.out.print("FU: ");
-                        consumeNal(nalBuf);
-                        nalBuf = null;
+                    if (e && fuNalBuf != null) {
+                        consumeNal(fuNalBuf);
+                        fuNalBuf = null;
                     }
 
 
@@ -155,14 +172,14 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
             }
             LOG.info("Done receiving RTP Packets");
             drainDecPictureBuffer(true);
-            countDownLatch.countDown();
             LOG.info("Picture Buffer drained");
             return null;
         } finally {
-            if (isOpen) {
+            countDownLatch.countDown();
+            if (isReceiving && !Thread.currentThread().isInterrupted()) {
                 LOG.warning("Stopping RTP Receiver due to exception. " + toString());
             }
-            isOpen = false;
+            isReceiving = false;
         }
     }
 
@@ -175,4 +192,7 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
     }
 
 
+    public boolean isReceiving() {
+        return isReceiving;
+    }
 }
