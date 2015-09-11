@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 public class RtpH264StreamingTrack extends H264NalConsumingTrack implements ReceivingStreamingTrack {
     private static final Logger LOG = Logger.getLogger(RtpH264StreamingTrack.class.getName());
     boolean isReceiving = false;
-    private int initialTimeout = 10000;
+    private int initialTimeout = 120000;
     private int timeout = 5000;
     CountDownLatch countDownLatch = new CountDownLatch(1);
     private Phaser started;

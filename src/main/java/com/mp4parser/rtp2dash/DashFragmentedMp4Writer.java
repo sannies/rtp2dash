@@ -7,6 +7,7 @@ import com.mp4parser.boxes.iso14496.part12.TrackRunBox;
 import com.mp4parser.boxes.sampleentry.VisualSampleEntry;
 import com.mp4parser.streaming.MultiTrackFragmentedMp4Writer;
 import com.mp4parser.streaming.StreamingTrack;
+import com.mp4parser.streaming.extensions.TrackIdTrackExtension;
 import com.mp4parser.tools.Path;
 import mpeg.dash.schema.mpd._2011.RepresentationType;
 import mpeg.dash.schema.mpd._2011.SegmentTemplateType;
@@ -20,7 +21,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Logger;
 
+/**
 
+ */
 public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
     private static final Logger LOG = Logger.getLogger(DashFragmentedMp4Writer.class.getName());
     private File representationBaseDir;
@@ -29,15 +32,25 @@ public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
     private StreamingTrack source;
 
 
-    public DashFragmentedMp4Writer(ReceivingStreamingTrack source, File baseDir, long adaptationSetId, String representationId, OutputStream outputStream) throws IOException {
-        super(Collections.<StreamingTrack>singletonList(source), outputStream);
+    public DashFragmentedMp4Writer(ReceivingStreamingTrack source, File baseDir) throws IOException {
+        super(Collections.<StreamingTrack>singletonList(source), new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+
+            }
+        });
         if (!source.isReceiving()) {
             LOG.warning(source + " is not receiving any data. Will not create Representation.");
             return;
         }
+        RepresentationIdTrackExtension representationIdTrackExtension = source.getTrackExtension(RepresentationIdTrackExtension.class);
+        assert representationIdTrackExtension != null;
+        TrackIdTrackExtension trackIdTrackExtension = source.getTrackExtension(TrackIdTrackExtension.class);
+        assert trackIdTrackExtension != null;
+
         this.source = source;
-        this.adaptationSetId = adaptationSetId;
-        this.representationId = representationId;
+        this.adaptationSetId = trackIdTrackExtension.getTrackId();
+        this.representationId = representationIdTrackExtension.getRepresentationId();
         representationBaseDir = new File(baseDir, representationId);
         representationBaseDir.mkdir();
         this.timeOut = 10000;

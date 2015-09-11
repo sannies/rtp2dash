@@ -6,7 +6,7 @@
     <groupId>com.mp4parser.rtp2dash</groupId>
     <artifactId>rtp2dash</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
+    <version>1.0.1</version>
     <name>Project - rtp2dash</name>
     <url>http://maven.apache.org</url>
 
@@ -20,12 +20,12 @@
         <dependency>
             <groupId>org.mp4parser</groupId>
             <artifactId>isoparser</artifactId>
-            <version>1.9.15</version>
+            <version>1.9.17</version>
         </dependency>
         <dependency>
             <groupId>org.mp4parser</groupId>
             <artifactId>streaming</artifactId>
-            <version>1.9.15</version>
+            <version>1.9.17</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -103,7 +103,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.github.sannies.isoviewer.IsoViewerFx</mainClass>
+                                    <mainClass>com.mp4parser.rtp2dash.Server</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -115,7 +115,7 @@
     <repositories>
         <repository>
             <id>mp4parser-2.x</id>
-            <url>https://oss.sonatype.org/content/repositories/central_bundles-4921</url>
+            <url>https://oss.sonatype.org/content/repositories/central_bundles-4932/</url>
         </repository>
     </repositories>
 </project>

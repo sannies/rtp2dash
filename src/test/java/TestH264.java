@@ -24,12 +24,7 @@ public class TestH264 {
         OutputStream os = new FileOutputStream("output.mp4");
         final MultiTrackFragmentedMp4Writer streamingMp4Writer = new MultiTrackFragmentedMp4Writer(Collections.<StreamingTrack>singletonList(st), os);
         Future<Void> stFuture = es.submit(st);
-        es.submit(new Callable<Void>() {
-            public Void call() throws Exception {
-                streamingMp4Writer.write();
-                return null;
-            }
-        });
+        es.submit(streamingMp4Writer);
         System.in.read();
         streamingMp4Writer.close();
         st.close();
