@@ -6,7 +6,7 @@
     <groupId>com.mp4parser.rtp2dash</groupId>
     <artifactId>rtp2dash</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>Project - rtp2dash</name>
     <url>http://maven.apache.org</url>
 
