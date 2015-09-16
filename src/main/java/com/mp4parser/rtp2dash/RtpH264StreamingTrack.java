@@ -118,9 +118,12 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Rece
                         int length = IsoTypeReader.readUInt16(payload);
                         ByteBuffer nalBuf = payload.slice();
                         nalBuf.limit(length);
+                        byte[] nal = new byte[nalBuf.remaining()];
+                        nalBuf.get(nal);
+                        consumeNal(nal);
                         payload.position(payload.position() + length);
                     }
-                    throw new RuntimeException("No Support for STAP A " + toString());
+                    //throw new RuntimeException("No Support for STAP A " + toString());
 
                 } else if (nalUnitType == 25) {
                     throw new RuntimeException("No Support for STAP B " + toString());
