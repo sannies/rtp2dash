@@ -17,7 +17,7 @@ Prerequisites:
 
 additionally you can download a prebuilt version and the demo video:
 
-* [Rtp2DASH Release 1.0](https://github.com/sannies/rtp2dash/releases/download/v1.0/rtp2dash-1.0.jar)
+* [Rtp2DASH Release 1.0.2](https://github.com/sannies/rtp2dash/releases/download/v1.0.2/rtp2dash-1.0.2.jar)
 * [tos-mbr-in-one-file.mp4](http://com.mp4parser.s3.amazonaws.com/tos-mbr-in-one-file.mp4)
 
 
