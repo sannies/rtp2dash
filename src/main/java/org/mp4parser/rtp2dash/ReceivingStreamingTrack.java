@@ -1,6 +1,7 @@
-package com.mp4parser.rtp2dash;
+package org.mp4parser.rtp2dash;
 
-import com.mp4parser.streaming.StreamingTrack;
+
+import org.mp4parser.streaming.StreamingTrack;
 
 import java.util.concurrent.Callable;
 

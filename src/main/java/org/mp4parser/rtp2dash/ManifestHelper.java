@@ -1,4 +1,4 @@
-package com.mp4parser.rtp2dash;
+package org.mp4parser.rtp2dash;
 
 import mpeg.dash.schema.mpd._2011.*;
 

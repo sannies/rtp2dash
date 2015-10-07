@@ -1,21 +1,22 @@
-package com.mp4parser.rtp2dash;
+package org.mp4parser.rtp2dash;
 
-import com.mp4parser.Box;
-import com.mp4parser.boxes.dolby.AC3SpecificBox;
-import com.mp4parser.boxes.dolby.DTSSpecificBox;
-import com.mp4parser.boxes.dolby.EC3SpecificBox;
-import com.mp4parser.boxes.dolby.MLPSpecificBox;
-import com.mp4parser.boxes.iso14496.part1.objectdescriptors.AudioSpecificConfig;
-import com.mp4parser.boxes.iso14496.part1.objectdescriptors.DecoderConfigDescriptor;
-import com.mp4parser.boxes.iso14496.part12.OriginalFormatBox;
-import com.mp4parser.boxes.iso14496.part14.ESDescriptorBox;
-import com.mp4parser.boxes.iso14496.part15.AvcConfigurationBox;
-import com.mp4parser.boxes.iso14496.part15.HevcConfigurationBox;
-import com.mp4parser.boxes.iso14496.part30.XMLSubtitleSampleEntry;
-import com.mp4parser.boxes.sampleentry.AudioSampleEntry;
-import com.mp4parser.boxes.sampleentry.SampleEntry;
-import com.mp4parser.tools.Hex;
-import com.mp4parser.tools.Path;
+
+import org.mp4parser.Box;
+import org.mp4parser.boxes.dolby.AC3SpecificBox;
+import org.mp4parser.boxes.dolby.DTSSpecificBox;
+import org.mp4parser.boxes.dolby.EC3SpecificBox;
+import org.mp4parser.boxes.dolby.MLPSpecificBox;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.AudioSpecificConfig;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.DecoderConfigDescriptor;
+import org.mp4parser.boxes.iso14496.part12.OriginalFormatBox;
+import org.mp4parser.boxes.iso14496.part14.ESDescriptorBox;
+import org.mp4parser.boxes.iso14496.part15.AvcConfigurationBox;
+import org.mp4parser.boxes.iso14496.part15.HevcConfigurationBox;
+import org.mp4parser.boxes.iso14496.part30.XMLSubtitleSampleEntry;
+import org.mp4parser.boxes.sampleentry.AudioSampleEntry;
+import org.mp4parser.boxes.sampleentry.SampleEntry;
+import org.mp4parser.tools.Hex;
+import org.mp4parser.tools.Path;
 
 import java.util.List;
 

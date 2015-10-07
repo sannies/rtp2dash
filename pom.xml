@@ -20,12 +20,12 @@
         <dependency>
             <groupId>org.mp4parser</groupId>
             <artifactId>isoparser</artifactId>
-            <version>1.9.18</version>
+            <version>1.9.21</version>
         </dependency>
         <dependency>
             <groupId>org.mp4parser</groupId>
             <artifactId>streaming</artifactId>
-            <version>1.9.18</version>
+            <version>1.9.21</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -103,7 +103,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.mp4parser.rtp2dash.Server</mainClass>
+                                    <mainClass>org.mp4parser.rtp2dash.Server</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -115,7 +115,7 @@
     <repositories>
         <repository>
             <id>mp4parser-2.x</id>
-            <url>https://oss.sonatype.org/content/repositories/central_bundles-5056</url>
+            <url>https://oss.sonatype.org/content/repositories/orgmp4parser-1001/</url>
         </repository>
     </repositories>
 </project>

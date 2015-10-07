@@ -1,6 +1,6 @@
-package com.mp4parser.rtp2dash;
+package org.mp4parser.rtp2dash;
 
-import com.mp4parser.streaming.extensions.TrackIdTrackExtension;
+import org.mp4parser.streaming.extensions.TrackIdTrackExtension;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -18,7 +18,6 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.IOUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

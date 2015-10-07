@@ -1,7 +1,7 @@
-import com.mp4parser.rtp2dash.RtpAacStreamingTrack;
-import com.mp4parser.rtp2dash.RtpH264StreamingTrack;
-import com.mp4parser.streaming.MultiTrackFragmentedMp4Writer;
-import com.mp4parser.streaming.StreamingTrack;
+
+import org.mp4parser.rtp2dash.RtpAacStreamingTrack;
+import org.mp4parser.streaming.MultiTrackFragmentedMp4Writer;
+import org.mp4parser.streaming.StreamingTrack;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

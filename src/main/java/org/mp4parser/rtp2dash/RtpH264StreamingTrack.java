@@ -1,9 +1,9 @@
-package com.mp4parser.rtp2dash;
+package org.mp4parser.rtp2dash;
 
-import com.mp4parser.muxer.tracks.h264.parsing.read.BitstreamReader;
-import com.mp4parser.streaming.rawformats.h264.H264NalConsumingTrack;
-import com.mp4parser.tools.IsoTypeReader;
-import com.mp4parser.tools.Mp4Arrays;
+import org.mp4parser.muxer.tracks.h264.parsing.read.BitstreamReader;
+import org.mp4parser.streaming.rawformats.h264.H264NalConsumingTrack;
+import org.mp4parser.tools.IsoTypeReader;
+import org.mp4parser.tools.Mp4Arrays;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Rece
         }
     }
 
-    public RtpH264StreamingTrack(Phaser started, String sprop, int port, int payloadType) throws IOException {
+    public RtpH264StreamingTrack(Phaser started, String sprop, int port, int payloadType) throws IOException, InterruptedException {
         super();
         this.started = started;
         this.started.register();
@@ -59,7 +59,7 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Rece
         consumeNal(pps);
     }
 
-    public Void call() throws IOException {
+    public Void call() throws IOException, InterruptedException {
         isReceiving = true;
         boolean once = false;
         try {

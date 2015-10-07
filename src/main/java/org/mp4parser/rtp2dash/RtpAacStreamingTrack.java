@@ -1,18 +1,18 @@
-package com.mp4parser.rtp2dash;
+package org.mp4parser.rtp2dash;
 
-import com.mp4parser.boxes.iso14496.part1.objectdescriptors.AudioSpecificConfig;
-import com.mp4parser.boxes.iso14496.part1.objectdescriptors.DecoderConfigDescriptor;
-import com.mp4parser.boxes.iso14496.part1.objectdescriptors.ESDescriptor;
-import com.mp4parser.boxes.iso14496.part1.objectdescriptors.SLConfigDescriptor;
-import com.mp4parser.boxes.iso14496.part12.SampleDescriptionBox;
-import com.mp4parser.boxes.iso14496.part14.ESDescriptorBox;
-import com.mp4parser.boxes.sampleentry.AudioSampleEntry;
-import com.mp4parser.muxer.tracks.h264.parsing.read.BitstreamReader;
-import com.mp4parser.streaming.AbstractStreamingTrack;
-import com.mp4parser.streaming.StreamingSampleImpl;
-import com.mp4parser.streaming.extensions.DefaultSampleFlagsTrackExtension;
-import com.mp4parser.tools.Ascii;
-import com.mp4parser.tools.Hex;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.AudioSpecificConfig;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.DecoderConfigDescriptor;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.ESDescriptor;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.SLConfigDescriptor;
+import org.mp4parser.boxes.iso14496.part12.SampleDescriptionBox;
+import org.mp4parser.boxes.iso14496.part14.ESDescriptorBox;
+import org.mp4parser.boxes.sampleentry.AudioSampleEntry;
+import org.mp4parser.muxer.tracks.h264.parsing.read.BitstreamReader;
+import org.mp4parser.streaming.AbstractStreamingTrack;
+import org.mp4parser.streaming.StreamingSampleImpl;
+import org.mp4parser.streaming.extensions.DefaultSampleFlagsTrackExtension;
+import org.mp4parser.tools.Ascii;
+import org.mp4parser.tools.Hex;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
