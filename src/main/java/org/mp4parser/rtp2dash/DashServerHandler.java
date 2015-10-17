@@ -129,7 +129,11 @@ public class DashServerHandler extends SimpleChannelInboundHandler<FullHttpReque
         final String uri = request.getUri();
 
         if ("/Manifest.mpd".equals(uri)) {
-            sendManifest(ctx);
+            try {
+                sendManifest(ctx);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             return;
         }
 

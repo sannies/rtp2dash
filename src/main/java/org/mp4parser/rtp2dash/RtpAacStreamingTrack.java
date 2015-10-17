@@ -21,19 +21,14 @@ import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Phaser;
+import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
-/**
- * Created by sannies on 01.09.2015.
- */
-public class RtpAacStreamingTrack extends AbstractStreamingTrack implements ReceivingStreamingTrack {
+
+public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Callable<Void> {
     private static final Logger LOG = Logger.getLogger(RtpAacStreamingTrack.class.getName());
-    boolean isReceiving = false;
     private int initialTimeout = 120000;
     private int timeout = 5000;
-    CountDownLatch countDownLatch = new CountDownLatch(1);
     private int port;
     private int payloadType;
     private int sizeLength;
@@ -41,11 +36,14 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Rece
     private long clockrate;
     SampleDescriptionBox stsd;
     String language = "und";
-    private Phaser started;
+    DatagramSocket socket;
 
-    public RtpAacStreamingTrack(Phaser started, int port, int payloadType, int bandwidth, String fmtp, String rtpMap) {
-        this.started = started;
-        this.started.register();
+
+
+
+
+    public RtpAacStreamingTrack(int port, int payloadType, int bandwidth, String fmtp, String rtpMap) {
+
         String encoding = rtpMap.split("/")[0];
         clockrate = Integer.parseInt(rtpMap.split("/")[1]);
         int audioChannels = Integer.parseInt(rtpMap.split("/")[2]);
@@ -127,82 +125,67 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Rece
 
     }
 
-    public boolean isReceiving() {
-        return isReceiving;
-    }
 
     public Void call() throws IOException {
-        isReceiving = true;
-        boolean once = false;
-        try {
-            DatagramSocket socket = new DatagramSocket(port);
-            socket.setSoTimeout(initialTimeout);
 
-            byte[] buf = new byte[16384];
-            LOG.info("Start Receiving AAC RTP Packets on port " + port);
-            while (isReceiving && !Thread.currentThread().isInterrupted()) {
-                DatagramPacket packet = new DatagramPacket(buf, buf.length);
-                try {
-                    socket.receive(packet);
-                    if (!once) {
-                        once = true;
-                        this.started.arrive();
-                    }
-                } catch (SocketTimeoutException e) {
-                    LOG.info("Socket Timeout closed RtpAacStreamingTrack");
-                    isReceiving = false;
-                    continue;
-                }
-                socket.setSoTimeout(timeout);
-                BitstreamReader bsr = new BitstreamReader(new ByteArrayInputStream(packet.getData()));
-                int version = (int) bsr.readNBit(2);
-                boolean padding = bsr.readBool();
-                boolean extension = bsr.readBool();
-                int csrcCount = (int) bsr.readNBit(4);
-                boolean marker = bsr.readBool();
-                int payloadType = (int) bsr.readNBit(7);
-                if (payloadType != this.payloadType) {
-                    continue;
-                }
-                int sequenceNumber = (int) bsr.readNBit(16);
-                byte[] payload = packet.getData();
+        socket = new DatagramSocket(port);
+        socket.setSoTimeout(initialTimeout);
+        socket.setReceiveBufferSize(65536);
 
-                long rtpTimestamp = getInt(payload, 4);
-                long ssrc = getInt(payload, 8);
-                long[] csrc = new long[csrcCount];
-                for (int i = 0; i < csrc.length; i++) {
-                    csrc[i] = getInt(payload, 12 + i * 4);
-                }
-
-                int offset = 12 + csrc.length * 4;
-
-                int auHeaderLength = (b2i(payload[offset]) << 8 >> indexLength) + (b2i(payload[offset + 1]) >> indexLength);
-                int auIndex = (payload[offset + 1] >> indexLength);
-                offset += 2;
-                int[] sampleSizes = new int[auHeaderLength / 2];
-                for (int i = 0; i < sampleSizes.length; i++) {
-                    sampleSizes[i] = (b2i(payload[offset + (i * 2)]) << 8 >> indexLength) + (b2i(payload[offset + 1 + (i * 2)]) >> indexLength);
-                }
-                offset += auHeaderLength;
-                for (int sampleSize : sampleSizes) {
-                    byte[] currentSample = new byte[sampleSize];
-                    System.arraycopy(payload, offset, currentSample, 0, sampleSize);
-                    samples.add(new StreamingSampleImpl(ByteBuffer.wrap(currentSample), 1024));
-                    //  hex(currentSample);
-                    offset += sampleSize;
-                }
-
-
+        byte[] buf = new byte[16384];
+        LOG.info("Start Receiving AAC RTP Packets on port " + port);
+        while (!Thread.currentThread().isInterrupted()) {
+            DatagramPacket packet = new DatagramPacket(buf, buf.length);
+            try {
+                socket.receive(packet);
+            } catch (SocketTimeoutException e) {
+                LOG.info("Socket Timeout. Closing " + this);
+                close();
+                return null;
             }
-            LOG.info("Done receiving RTP Packets");
-            return null;
-        } finally {
-            countDownLatch.countDown();
-            if (isReceiving && !Thread.currentThread().isInterrupted()) {
-                LOG.warning("Stopping RTP Receiver due to exception. " + toString());
+            socket.setSoTimeout(timeout);
+            BitstreamReader bsr = new BitstreamReader(new ByteArrayInputStream(packet.getData()));
+            int version = (int) bsr.readNBit(2);
+            boolean padding = bsr.readBool();
+            boolean extension = bsr.readBool();
+            int csrcCount = (int) bsr.readNBit(4);
+            boolean marker = bsr.readBool();
+            int payloadType = (int) bsr.readNBit(7);
+            if (payloadType != this.payloadType) {
+                continue;
             }
-            isReceiving = false;
+            int sequenceNumber = (int) bsr.readNBit(16);
+            byte[] payload = packet.getData();
+
+            long rtpTimestamp = getInt(payload, 4);
+            long ssrc = getInt(payload, 8);
+            long[] csrc = new long[csrcCount];
+            for (int i = 0; i < csrc.length; i++) {
+                csrc[i] = getInt(payload, 12 + i * 4);
+            }
+
+            int offset = 12 + csrc.length * 4;
+
+            int auHeaderLength = (b2i(payload[offset]) << 8 >> indexLength) + (b2i(payload[offset + 1]) >> indexLength);
+            int auIndex = (payload[offset + 1] >> indexLength);
+            offset += 2;
+            int[] sampleSizes = new int[auHeaderLength / 2];
+            for (int i = 0; i < sampleSizes.length; i++) {
+                sampleSizes[i] = (b2i(payload[offset + (i * 2)]) << 8 >> indexLength) + (b2i(payload[offset + 1 + (i * 2)]) >> indexLength);
+            }
+            offset += auHeaderLength;
+            for (int sampleSize : sampleSizes) {
+                byte[] currentSample = new byte[sampleSize];
+                System.arraycopy(payload, offset, currentSample, 0, sampleSize);
+                sampleSink.acceptSample(new StreamingSampleImpl(ByteBuffer.wrap(currentSample), 1024), this);
+                //  hex(currentSample);
+                offset += sampleSize;
+            }
+
+
         }
+        LOG.info("Done receiving RTP Packets");
+        return null;
     }
 
     public static int b2i(byte b) {
@@ -223,7 +206,7 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Rece
         String ascii = "";
         for (byte b : payload) {
             String a = Ascii.convert(new byte[]{b});
-            if (a == null || a.length() == 0) {
+            if (a.length() == 0) {
                 a = ".";
             }
             if (!isAsciiPrintable(a.charAt(0))) {
@@ -249,9 +232,6 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Rece
         return clockrate;
     }
 
-    public boolean hasMoreSamples() {
-        return samples.size() > 0 || isReceiving;
-    }
 
     public String getHandler() {
         return "soun";
@@ -270,7 +250,7 @@ public class RtpAacStreamingTrack extends AbstractStreamingTrack implements Rece
     }
 
     public void close() throws IOException {
-
+        socket.close();
     }
 
     @Override

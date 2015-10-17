@@ -20,12 +20,12 @@
         <dependency>
             <groupId>org.mp4parser</groupId>
             <artifactId>isoparser</artifactId>
-            <version>1.9.21</version>
+            <version>1.9.23</version>
         </dependency>
         <dependency>
             <groupId>org.mp4parser</groupId>
             <artifactId>streaming</artifactId>
-            <version>1.9.21</version>
+            <version>1.9.23</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

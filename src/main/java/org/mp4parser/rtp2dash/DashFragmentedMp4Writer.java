@@ -3,6 +3,8 @@ package org.mp4parser.rtp2dash;
 import mpeg.dash.schema.mpd._2011.RepresentationType;
 import mpeg.dash.schema.mpd._2011.SegmentTemplateType;
 import mpeg.dash.schema.mpd._2011.SegmentTimelineType;
+import org.mp4parser.BasicContainer;
+import org.mp4parser.Box;
 import org.mp4parser.Container;
 import org.mp4parser.IsoFile;
 import org.mp4parser.boxes.iso14496.part12.TrackFragmentBaseMediaDecodeTimeBox;
@@ -16,6 +18,7 @@ import org.mp4parser.tools.Path;
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.channels.WritableByteChannel;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,17 +35,8 @@ public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
     private StreamingTrack source;
 
 
-    public DashFragmentedMp4Writer(ReceivingStreamingTrack source, File baseDir) throws IOException {
-        super(Collections.<StreamingTrack>singletonList(source), new OutputStream() {
-            @Override
-            public void write(int b) throws IOException {
-
-            }
-        });
-        if (!source.isReceiving()) {
-            LOG.warning(source + " is not receiving any data. Will not create Representation.");
-            return;
-        }
+    public DashFragmentedMp4Writer(StreamingTrack source, File baseDir) throws IOException {
+        super(Collections.<StreamingTrack>singletonList(source), null);
         RepresentationIdTrackExtension representationIdTrackExtension = source.getTrackExtension(RepresentationIdTrackExtension.class);
         assert representationIdTrackExtension != null;
         TrackIdTrackExtension trackIdTrackExtension = source.getTrackExtension(TrackIdTrackExtension.class);
@@ -53,46 +47,53 @@ public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
         this.representationId = representationIdTrackExtension.getRepresentationId();
         representationBaseDir = new File(baseDir, representationId);
         representationBaseDir.mkdir();
-        this.timeOut = 10000;
     }
 
     public StreamingTrack getSource() {
         return source;
     }
 
+    @Override
+    public synchronized void close() throws IOException {
+        super.close();
+        isClosed = true;
+    }
+
+    boolean isClosed = false;
+
     public boolean isClosed() {
-        return source == null || !source.hasMoreSamples();
+        return isClosed;
     }
 
+    protected void writeHeader(Box... boxes) throws IOException {
+        FileOutputStream fos = new FileOutputStream(new File(representationBaseDir, "init.mp4"));
+        WritableByteChannel wbc = fos.getChannel();
+        write(wbc, boxes);
+        fos.close();
+        wbc.close();
+    }
+
+
     @Override
-    protected Container createHeader() {
-        Container initSegment = super.createHeader();
-        try {
-            WritableByteChannel wbc = new FileOutputStream(new File(representationBaseDir, "init.mp4")).getChannel();
-            initSegment.writeContainer(wbc);
-            wbc.close();
-        } catch (IOException e) {
-            LOG.severe(e.getLocalizedMessage());
-            throw new RuntimeException(e);
+    protected void writeFragment(Box... boxes) throws IOException {
+        TrackFragmentBaseMediaDecodeTimeBox tfdt = null;
+
+        for (Box box : boxes) {
+            if ("moof".equals(box.getType())) {
+                tfdt = Path.getPath(box, "traf[0]/tfdt[0]");
+                break;
+            }
         }
-        return initSegment;
-    }
 
-    @Override
-    protected Container createFragment(StreamingTrack streamingTrack) throws IOException {
-
-        Container boxes = super.createFragment(streamingTrack);
-
-        TrackFragmentBaseMediaDecodeTimeBox tfdt = Path.getPath(boxes, "moof[0]/traf[0]/tfdt[0]");
 
         assert tfdt != null;
         File f = new File(representationBaseDir, "media-" + tfdt.getBaseMediaDecodeTime() + ".mp4");
-        WritableByteChannel wbc = new FileOutputStream(f).getChannel();
-        //LOG.info("created file for fragment of " + streamingTrack);
-
-        boxes.writeContainer(wbc);
+        FileOutputStream fos = new FileOutputStream(f);
+        WritableByteChannel wbc = fos.getChannel();
+        write(wbc, boxes);
+        fos.close();
         wbc.close();
-        return boxes;
+
     }
 
     long getTime(File f) {
@@ -102,7 +103,7 @@ public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
     }
 
 
-    RepresentationType getRepresentation() {
+    RepresentationType getRepresentation() throws IOException {
         if (source == null) {
             return null;
         }
@@ -144,18 +145,13 @@ public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
         for (File file : files) {
             fileSize += file.length();
             long d = 0;
-            try {
-                FileInputStream fis = new FileInputStream(file);
-                IsoFile isoFile = new IsoFile(fis.getChannel());
-                TrackRunBox trun = Path.getPath(isoFile, "moof[0]/traf[0]/trun[0]");
-                for (TrackRunBox.Entry entry : trun.getEntries()) {
-                    d += entry.getSampleDuration();
-                }
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            FileInputStream fis = new FileInputStream(file);
+            IsoFile isoFile = new IsoFile(fis.getChannel());
+            TrackRunBox trun = Path.getPath(isoFile, "moof[0]/traf[0]/trun[0]");
+            for (TrackRunBox.Entry entry : trun.getEntries()) {
+                d += entry.getSampleDuration();
             }
+            fis.close();
 
             SegmentTimelineType.S sOld = segmentTimelineType.getS().size() > 0 ? segmentTimelineType.getS().get(segmentTimelineType.getS().size() - 1) : null;
             if (sOld != null && sOld.getD().equals(BigInteger.valueOf(d))) {

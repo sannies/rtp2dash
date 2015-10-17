@@ -1,5 +1,6 @@
 package org.mp4parser.rtp2dash;
 
+import io.netty.util.concurrent.EventExecutor;
 import org.mp4parser.streaming.extensions.TrackIdTrackExtension;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -61,60 +62,61 @@ public class Server {
 
         CompletionService<Void> ecs
                 = new ExecutorCompletionService<Void>(es);
-        Phaser waitOnReceivingStarted = new Phaser(1);
         // The init data is typically parsed from the SDP. As encoder setups are rather static I decided to
         // have a static configuration.
         final RtpH264StreamingTrack h264_0 = new RtpH264StreamingTrack(
-                waitOnReceivingStarted, "Z2QAFUs2QCAb5/ARAAADAAEAAAMAMI8WLZY=,aEquJyw=", 5000, 96);
+                 "Z2QAFUs2QCAb5/ARAAADAAEAAAMAMI8WLZY=,aEquJyw=", 5000, 96);
         h264_0.addTrackExtension(new TrackIdTrackExtension(1)); // trackId becomes AdaptationSetId
         h264_0.addTrackExtension(new RepresentationIdTrackExtension("h264_0"));
+
         final RtpH264StreamingTrack h264_1 = new RtpH264StreamingTrack(
-                waitOnReceivingStarted, "Z2QAFWs2QCcIebwEQAAAAwBAAAAMI8WLZYA=,aG6uJyw=", 5001, 96);
+                 "Z2QAFWs2QCcIebwEQAAAAwBAAAAMI8WLZYA=,aG6uJyw=", 5001, 96);
         h264_1.addTrackExtension(new TrackIdTrackExtension(1));
         h264_1.addTrackExtension(new RepresentationIdTrackExtension("h264_1"));
+
         final RtpH264StreamingTrack h264_2 = new RtpH264StreamingTrack(
-                waitOnReceivingStarted, "Z2QAHiLNkAwCmwEQAAADABAAAAMDCPFi2WA=,aCEq4nLA", 5002, 96);
+                 "Z2QAHiLNkAwCmwEQAAADABAAAAMDCPFi2WA=,aCEq4nLA", 5002, 96);
         h264_2.addTrackExtension(new TrackIdTrackExtension(1));
         h264_2.addTrackExtension(new RepresentationIdTrackExtension("h264_2"));
+
         final RtpH264StreamingTrack h264_3 = new RtpH264StreamingTrack(
-                waitOnReceivingStarted, "Z2QAHyrNkASA9sBEAAADAAQAAAMAwjxgxlg=,aClq4nLA", 5003, 96);
+                 "Z2QAHyrNkASA9sBEAAADAAQAAAMAwjxgxlg=,aClq4nLA", 5003, 96);
         h264_3.addTrackExtension(new TrackIdTrackExtension(1));
         h264_3.addTrackExtension(new RepresentationIdTrackExtension("h264_3"));
 
-        final RtpAacStreamingTrack aac_eng = new RtpAacStreamingTrack(waitOnReceivingStarted, 5004, 97, 128, "profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3; config=1190", "MPEG4-GENERIC/48000/2");
+        final RtpAacStreamingTrack aac_eng = new RtpAacStreamingTrack(5004, 97, 128, "profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3; config=1190", "MPEG4-GENERIC/48000/2");
         aac_eng.setLanguage("eng");
         aac_eng.addTrackExtension(new TrackIdTrackExtension(2));
         aac_eng.addTrackExtension(new RepresentationIdTrackExtension("aac_eng"));
 
-        final RtpAacStreamingTrack aac_ita = new RtpAacStreamingTrack(waitOnReceivingStarted, 5005, 97, 128, "profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3; config=1190", "MPEG4-GENERIC/48000/2");
+        final RtpAacStreamingTrack aac_ita = new RtpAacStreamingTrack(5005, 97, 128, "profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3; config=1190", "MPEG4-GENERIC/48000/2");
         aac_ita.setLanguage("ita");
         aac_ita.addTrackExtension(new TrackIdTrackExtension(3));
         aac_ita.addTrackExtension(new RepresentationIdTrackExtension("aac_ita"));
-
-        List<Future<Void>> rtpReaders = new ArrayList<Future<Void>>();
-        rtpReaders.add(ecs.submit(aac_ita));
-        rtpReaders.add(ecs.submit(aac_eng));
-        rtpReaders.add(ecs.submit(h264_0));
-        rtpReaders.add(ecs.submit(h264_1));
-        rtpReaders.add(ecs.submit(h264_2));
-        rtpReaders.add(ecs.submit(h264_3));
-
-        waitOnReceivingStarted.arriveAndAwaitAdvance();
-        // The execution will only pass this point if each Rtp[H264|Aac]StreamingTrack has received at least a single packet
-
 
         final List<DashFragmentedMp4Writer> writers = new ArrayList<DashFragmentedMp4Writer>();
 
         writers.add(new DashFragmentedMp4Writer(aac_ita, baseDir));
         writers.add(new DashFragmentedMp4Writer(aac_eng, baseDir));
         writers.add(new DashFragmentedMp4Writer(h264_0, baseDir));
-        writers.add(new DashFragmentedMp4Writer(h264_1, baseDir));
-        writers.add(new DashFragmentedMp4Writer(h264_2, baseDir));
-        writers.add(new DashFragmentedMp4Writer(h264_3, baseDir));
+//        writers.add(new DashFragmentedMp4Writer(h264_1, baseDir));
+//        writers.add(new DashFragmentedMp4Writer(h264_2, baseDir));
+//        writers.add(new DashFragmentedMp4Writer(h264_3, baseDir));
 
-        for (DashFragmentedMp4Writer writer : writers) {
-            ecs.submit(writer);
-        }
+        List<Future<Void>> rtpReaders = new ArrayList<Future<Void>>();
+        rtpReaders.add(ecs.submit(aac_ita));
+        rtpReaders.add(ecs.submit(aac_eng));
+        rtpReaders.add(ecs.submit(h264_0));
+//        rtpReaders.add(ecs.submit(h264_1));
+//        rtpReaders.add(ecs.submit(h264_2));
+//        rtpReaders.add(ecs.submit(h264_3));
+
+        // The execution will only pass this point if each Rtp[H264|Aac]StreamingTrack has received at least a single packet
+
+
+
+
+
 
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
@@ -159,6 +161,7 @@ public class Server {
                         throw new RuntimeException(e);
                     } catch (ExecutionException e) {
                         System.out.println("Execution exception " + e.getMessage());
+                        e.getCause().printStackTrace();
                         complete = true;
                         failed = true;
                         for (Future<Void> future : rtpReaders) {
@@ -169,6 +172,10 @@ public class Server {
                         }
                     }
                 }
+            }
+            System.in.read();
+            for (DashFragmentedMp4Writer writer : writers) {
+                writer.close();
             }
             if (!failed) {
                 ch.closeFuture().sync();

@@ -36,14 +36,13 @@ public class ManifestHelper {
         periodType.setId("1");
         mpd.getPeriod().add(periodType);
         periodType.setStart(DatatypeFactory.newInstance().newDuration(0));
-        boolean closed = true;
-        for (DashFragmentedMp4Writer trackWriter : tracks) {
-            closed &= trackWriter.isClosed();
-        }
+
         mpd.setMinBufferTime(DatatypeFactory.newInstance().newDuration(2000));
         mpd.setProfiles("urn:mpeg:dash:profile:isoff-live:2011");
         Map<Long, AdaptationSetType> adaptationSetsMap = new HashMap<Long, AdaptationSetType>();
+        boolean closed = true;
         for (DashFragmentedMp4Writer track : tracks) {
+            closed &= track.isClosed();
             RepresentationType representation = track.getRepresentation();
             if (representation != null) {
                 AdaptationSetType adaptationSetType = adaptationSetsMap.get(track.getAdaptationSetId());
@@ -89,6 +88,7 @@ public class ManifestHelper {
         }
         mpd.setMediaPresentationDuration(DatatypeFactory.newInstance().newDuration((long) (duration * 1000)));
 
+
         if (closed) {
             mpd.setType(PresentationType.STATIC);
 
@@ -97,8 +97,8 @@ public class ManifestHelper {
             mpd.setMinimumUpdatePeriod(DatatypeFactory.newInstance().newDuration(4000));
         }
 
-
         Marshaller marshaller = jaxbContext.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         StringWriter sw = new StringWriter();
         marshaller.marshal(new ObjectFactory().createMPD(mpd), sw);
         return sw.toString();
