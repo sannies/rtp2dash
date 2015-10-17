@@ -115,7 +115,7 @@
     <repositories>
         <repository>
             <id>mp4parser-2.x</id>
-            <url>https://oss.sonatype.org/content/repositories/orgmp4parser-1001/</url>
+            <url>https://oss.sonatype.org/content/repositories/orgmp4parser-1002</url>
         </repository>
     </repositories>
 </project>
