@@ -1,7 +1,7 @@
 
 import org.mp4parser.rtp2dash.RtpAacStreamingTrack;
-import org.mp4parser.streaming.MultiTrackFragmentedMp4Writer;
 import org.mp4parser.streaming.StreamingTrack;
+import org.mp4parser.streaming.output.mp4.FragmentedMp4Writer;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,8 +21,8 @@ public class TestAac {
 
         RtpAacStreamingTrack st = new RtpAacStreamingTrack( 5005, 97, 128, "profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3; config=1190", "MPEG4-GENERIC/48000/2");
         OutputStream os = new FileOutputStream("output.mp4");
-        final MultiTrackFragmentedMp4Writer streamingMp4Writer =
-                new MultiTrackFragmentedMp4Writer(Collections.<StreamingTrack>singletonList(st), Channels.newChannel(os));
+        final FragmentedMp4Writer streamingMp4Writer =
+                new FragmentedMp4Writer(Collections.<StreamingTrack>singletonList(st), Channels.newChannel(os));
         st.call();
         st.close();
         streamingMp4Writer.close();

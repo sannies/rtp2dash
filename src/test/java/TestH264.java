@@ -1,6 +1,6 @@
 import org.mp4parser.rtp2dash.RtpH264StreamingTrack;
-import org.mp4parser.streaming.MultiTrackFragmentedMp4Writer;
 import org.mp4parser.streaming.StreamingTrack;
+import org.mp4parser.streaming.output.mp4.FragmentedMp4Writer;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,7 +23,7 @@ public class TestH264 {
         RtpH264StreamingTrack st = new RtpH264StreamingTrack("Z2QAFUs2QCAb5/ARAAADAAEAAAMAMI8WLZY=,aEquJyw=", 5000, 96);
 
         OutputStream os = new FileOutputStream("output.mp4");
-        final MultiTrackFragmentedMp4Writer streamingMp4Writer = new MultiTrackFragmentedMp4Writer(Collections.<StreamingTrack>singletonList(st), Channels.newChannel(os));
+        final FragmentedMp4Writer streamingMp4Writer = new FragmentedMp4Writer(Collections.<StreamingTrack>singletonList(st), Channels.newChannel(os));
         ExecutorService es = Executors.newCachedThreadPool();
         es.submit(st);
 

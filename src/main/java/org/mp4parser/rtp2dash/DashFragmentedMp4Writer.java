@@ -3,16 +3,14 @@ package org.mp4parser.rtp2dash;
 import mpeg.dash.schema.mpd._2011.RepresentationType;
 import mpeg.dash.schema.mpd._2011.SegmentTemplateType;
 import mpeg.dash.schema.mpd._2011.SegmentTimelineType;
-import org.mp4parser.BasicContainer;
 import org.mp4parser.Box;
-import org.mp4parser.Container;
 import org.mp4parser.IsoFile;
 import org.mp4parser.boxes.iso14496.part12.TrackFragmentBaseMediaDecodeTimeBox;
 import org.mp4parser.boxes.iso14496.part12.TrackRunBox;
 import org.mp4parser.boxes.sampleentry.VisualSampleEntry;
-import org.mp4parser.streaming.MultiTrackFragmentedMp4Writer;
 import org.mp4parser.streaming.StreamingTrack;
 import org.mp4parser.streaming.extensions.TrackIdTrackExtension;
+import org.mp4parser.streaming.output.mp4.FragmentedMp4Writer;
 import org.mp4parser.tools.Path;
 
 import java.io.*;
@@ -27,7 +25,7 @@ import java.util.logging.Logger;
 /**
 
  */
-public class DashFragmentedMp4Writer extends MultiTrackFragmentedMp4Writer {
+public class DashFragmentedMp4Writer extends FragmentedMp4Writer {
     private static final Logger LOG = Logger.getLogger(DashFragmentedMp4Writer.class.getName());
     private File representationBaseDir;
     private long adaptationSetId;

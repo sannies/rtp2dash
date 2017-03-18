@@ -8,9 +8,9 @@ import org.mp4parser.boxes.iso14496.part12.SampleDescriptionBox;
 import org.mp4parser.boxes.iso14496.part14.ESDescriptorBox;
 import org.mp4parser.boxes.sampleentry.AudioSampleEntry;
 import org.mp4parser.muxer.tracks.h264.parsing.read.BitstreamReader;
-import org.mp4parser.streaming.AbstractStreamingTrack;
-import org.mp4parser.streaming.StreamingSampleImpl;
 import org.mp4parser.streaming.extensions.DefaultSampleFlagsTrackExtension;
+import org.mp4parser.streaming.input.AbstractStreamingTrack;
+import org.mp4parser.streaming.input.StreamingSampleImpl;
 import org.mp4parser.tools.Ascii;
 import org.mp4parser.tools.Hex;
 

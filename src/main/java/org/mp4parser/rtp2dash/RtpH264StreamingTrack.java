@@ -1,7 +1,7 @@
 package org.mp4parser.rtp2dash;
 
 import org.mp4parser.muxer.tracks.h264.parsing.read.BitstreamReader;
-import org.mp4parser.streaming.rawformats.h264.H264NalConsumingTrack;
+import org.mp4parser.streaming.input.h264.H264NalConsumingTrack;
 import org.mp4parser.tools.IsoTypeReader;
 import org.mp4parser.tools.Mp4Arrays;
 
@@ -13,8 +13,6 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Phaser;
 import java.util.logging.Logger;
 
 public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Callable<Void> {
@@ -39,9 +37,9 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
 
         String[] spspps = sprop.split(",");
         byte[] sps = Base64.getDecoder().decode(spspps[0]);
-        consumeNal(sps);
+        consumeNal(ByteBuffer.wrap(sps));
         byte[] pps = Base64.getDecoder().decode(spspps[1]);
-        consumeNal(pps);
+        consumeNal(ByteBuffer.wrap(pps));
     }
 
 
@@ -92,7 +90,7 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
                 }
                 byte[] nalSlice = new byte[payload.remaining()];
                 payload.get(nalSlice);
-                consumeNal(nalSlice);
+                consumeNal(ByteBuffer.wrap(nalSlice));
             } else if (nalUnitType == 24) {
                 payload.position(1);
                 while (payload.remaining() > 1) {
@@ -101,7 +99,7 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
                     nalBuf.limit(length);
                     byte[] nal = new byte[nalBuf.remaining()];
                     nalBuf.get(nal);
-                    consumeNal(nal);
+                    consumeNal(ByteBuffer.wrap(nal));
                     payload.position(payload.position() + length);
                 }
                 //throw new RuntimeException("No Support for STAP A " + toString());
@@ -130,7 +128,7 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
                     fuNalBuf = Mp4Arrays.copyOfAndAppend(fuNalBuf, nalSlice);
                 }
                 if (e && fuNalBuf != null) {
-                    consumeNal(fuNalBuf);
+                    consumeNal(ByteBuffer.wrap(fuNalBuf));
                     fuNalBuf = null;
                 }
 
@@ -164,7 +162,7 @@ public class RtpH264StreamingTrack extends H264NalConsumingTrack implements Call
 
         }
         LOG.info("Done receiving RTP Packets");
-        drainDecPictureBuffer(true);
+        pushSample(null, true, false);
         LOG.info("Picture Buffer drained");
         return null;
 

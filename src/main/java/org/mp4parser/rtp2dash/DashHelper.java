@@ -18,6 +18,7 @@ import org.mp4parser.boxes.sampleentry.SampleEntry;
 import org.mp4parser.tools.Hex;
 import org.mp4parser.tools.Path;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -270,11 +271,11 @@ public final class DashHelper {
         if ("avc1".equals(type) || "avc2".equals(type) || "avc3".equals(type) || "avc4".equals(type)) {
             AvcConfigurationBox avcConfigurationBox = Path.getPath((Box) se, "avcC");
             assert avcConfigurationBox != null;
-            List<byte[]> spsbytes = avcConfigurationBox.getSequenceParameterSets();
+            List<ByteBuffer> spsbytes = avcConfigurationBox.getSequenceParameterSets();
             byte[] CodecInit = new byte[3];
-            CodecInit[0] = spsbytes.get(0)[1];
-            CodecInit[1] = spsbytes.get(0)[2];
-            CodecInit[2] = spsbytes.get(0)[3];
+            CodecInit[0] = spsbytes.get(0).get(1);
+            CodecInit[1] = spsbytes.get(0).get(2);
+            CodecInit[2] = spsbytes.get(0).get(3);
             return (type + "." + Hex.encodeHex(CodecInit)).toLowerCase();
         } else if (type.equals("mp4a")) {
             ESDescriptorBox esDescriptorBox = Path.getPath((Box) se, "esds");
